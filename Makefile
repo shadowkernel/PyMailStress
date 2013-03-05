@@ -1,10 +1,10 @@
-.PHONY: test
+.PHONY: test tags clean
+
 test:
-	./PyMailStress.py -c 163.conf -u userdb.txt -m 1hr.conf
+	./main.py -c etc/163.conf -u etc/userdb.txt -m etc/model.conf
 
 tags:
 	etags *.py
 
-.PHONY: clean
 clean:
 	rm -rf *.pyc

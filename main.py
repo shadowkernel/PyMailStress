@@ -4,8 +4,7 @@
 import ConfigParser
 import os
 
-import send
-import fetch
+from lib import send, fetch
 
 config = ConfigParser.ConfigParser()
 config.read('config')
