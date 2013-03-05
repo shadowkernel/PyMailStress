@@ -3,7 +3,6 @@
 
 # 这个类用于提供邮件的用户名密码，设计模式：Factory
 
-
 class MailAccount:
     @staticmethod
     def get_account(method="txt", num):
@@ -21,14 +20,20 @@ class MailAccount:
 
 class LDAPAccount:
     def get_account(num):
+        pass
         #从LDAP服务获取用户名和密码
 
 class TxtAccount:
     def get_account(num):
+        #TODO: 从用户数据库中获取帐号和密码
+        pass
+
+
         #从用户制定的文本文件获取用户名和密码
 
 
 if __name__=="__main__":
+    #　TODO: 需要通过测试
     # For testing
     m=MailAccount
     print m.get_account("txt",200)
