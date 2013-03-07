@@ -1,4 +1,3 @@
-etc/userdb.txt
 *.pyc
 */*.pyc
 .DS_Store
