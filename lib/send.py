@@ -23,6 +23,7 @@ thread_count = len(accounts)
 test_duration = int(config.get('smtp', 'test_duration'))
 login_interval=int(config.get('smtp', 'login_interval'))
 send_count = int(config.get('smtp', 'send_count'))
+verbose=bool(int(config.get('logging','verbose')))
 
 msg = MIMEMultipart()
 msg['Subject'] = 'TEST'
@@ -73,8 +74,10 @@ class SendMail(threading.Thread):
                 global send_success
                 send_success = send_success + 1
                 lock.release()
-            except:
+            except Exception as e:
                 lock.acquire()
+                if verbose: 
+                    print "发送邮件失败：", e
                 global send_failed
                 send_failed = send_failed + 1
                 lock.release()
@@ -98,8 +101,8 @@ def go():
         thread.join()
 
     print '\n----发送邮件统计结果----'
-    print '登陆成功次数: %d 次' % login_success
-    print '登陆失败次数: %d 次' % login_failed
+    print '登录成功次数: %d 次' % login_success
+    print '登录失败次数: %d 次' % login_failed
     print '发送成功邮件: %d 封' % send_success
     print '发送失败邮件: %d 封' % send_failed
     print '发送邮件容量: %d B' % (send_success * sys.getsizeof(msg))

@@ -16,6 +16,7 @@ server_addr = config.get('imap', 'addr')
 thread_count = len(accounts)
 test_duration = int(config.get('imap', 'test_duration'))
 login_interval = int(config.get('imap', 'login_interval'))
+verbose=bool(int(config.get('logging','verbose')))
 
 # statistics
 login_success = 0
@@ -78,8 +79,8 @@ def go():
         thread.join()
 
     print '\n----接收邮件统计结果----'
-    print '登陆成功次数: %d 次' % login_success
-    print '登陆失败次数: %d 次' % login_failed
+    print '登录成功次数: %d 次' % login_success
+    print '登录失败次数: %d 次' % login_failed
     print '下载邮件: %d 封' % fetch_mail
     print '下载邮件容量: %d B' % download_size
 
