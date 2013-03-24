@@ -7,31 +7,56 @@ import time
 import ConfigParser
 import smtplib
 import threading
+from random import choice, randint
 
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 
 from lib import account
 
 config = ConfigParser.ConfigParser()
 config.read('etc/pms_config.conf')
+# check
 accounts = account.get()
+# check
 server_addr = config.get('smtp', 'addr')
-To = config.get('smtp', 'to')
+# check
 thread_count = len(accounts)
-test_duration = int(config.get('smtp', 'test_duration'))
-login_interval=int(config.get('smtp', 'login_interval'))
+test_duration = int(config.get('general', 'test_duration'))
+# check
+min_interval = int(config.get('general', 'min_interval'))
+# check
+max_interval = int(config.get('general', 'max_interval'))
+# check
+verbose = int(config.get('general','verbose'))
 send_count = int(config.get('smtp', 'send_count'))
-verbose=bool(int(config.get('logging','verbose')))
+# check
 
 msg = MIMEMultipart()
 msg['Subject'] = 'TEST'
 msg['From'] = "Joe"
 msg['To'] = "Whatever"
 
-content = "It's a Long Way to the Top if You Wanna Rock'N'Roll!!!!"
-msg.attach(MIMEText(content, 'plain'));
+# rewrite
+content_file = config.get('smtp', 'content')
+if content_file == '':
+    content = "It's a Long Way to the Top if You Wanna Rock'N'Roll!!!!"
+else:
+    fp = open(content_file, 'r')
+    # check
+    content = fp.read()
+    fp.close()
+
+msg.attach(MIMEText(content, 'plain'))
+
+attach_file = config.get('smtp', 'attachment')
+if attach_file != '':
+    fp = open(attach_file, 'rb')
+    attachment = MIMEApplication(fp.read())
+    fp.close()
+    msg.attach(attachment)
+
 msg = msg.as_string()
 
 # statistics
@@ -69,14 +94,14 @@ class SendMail(threading.Thread):
 
         for x in xrange(send_count):
             try:
-                server.sendmail(self.username, To, msg)
+                server.sendmail(self.username, choice(accounts)[0], msg)
                 lock.acquire()
                 global send_success
                 send_success = send_success + 1
                 lock.release()
             except Exception as e:
                 lock.acquire()
-                if verbose: 
+                if verbose:
                     print "发送邮件失败：", e
                 global send_failed
                 send_failed = send_failed + 1
@@ -89,7 +114,7 @@ class SendMail(threading.Thread):
         while True:
             if time.time() - start > test_duration: break
             self.send_mail()
-            time.sleep(login_interval)
+            time.sleep(randint(min_interval, max_interval))
 
 def go():
     threads = [SendMail(i) for i in xrange(thread_count)]

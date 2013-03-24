@@ -6,17 +6,25 @@ import ConfigParser
 import imaplib
 import threading
 import email
+from random import randint
 
-import account
+from lib import account
 
 config = ConfigParser.ConfigParser()
 config.read('etc/pms_config.conf')
+# check
 accounts = account.get()
+# check
 server_addr = config.get('imap', 'addr')
+# check
 thread_count = len(accounts)
-test_duration = int(config.get('imap', 'test_duration'))
-login_interval = int(config.get('imap', 'login_interval'))
-verbose=bool(int(config.get('logging','verbose')))
+test_duration = int(config.get('general', 'test_duration'))
+# check
+min_interval = int(config.get('general', 'min_interval'))
+# check
+max_interval = int(config.get('general', 'max_interval'))
+# check
+verbose = int(config.get('general','verbose'))
 
 # statistics
 login_success = 0
@@ -67,7 +75,7 @@ class FetchMail(threading.Thread):
         while True:
             if time.time() - start > test_duration: break
             self.get_mail()
-            time.sleep(login_interval)
+            time.sleep(randint(min_interval, max_interval))
 
 def go():
     threads = [FetchMail(i) for i in xrange(thread_count)]

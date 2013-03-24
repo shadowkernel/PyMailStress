@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import ConfigParser
 import os
 
 from lib import send, fetch

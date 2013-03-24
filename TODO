@@ -9,7 +9,7 @@
 * 申请两个163邮箱帐号 [done]
 * 为163邮件服务写配置文件 [done]
 * 邮件帐户信息读取模块 [done]
-* send与fetch中的Log模块 [focus]
+* send与fetch中的Log模块 [done]
 * 用户输入选项处理模块 [close]
 * Debug
 * User Manual
