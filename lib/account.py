@@ -13,6 +13,3 @@ def get():
         result.append(re.split('\s+', line, 1))
 
     return result
-
-if __name__ == "__main__":
-    get()

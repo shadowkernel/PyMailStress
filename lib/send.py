@@ -22,12 +22,14 @@ accounts = account.get()
 # check
 server_addr = config.get('smtp', 'addr')
 # check
+tsl_mode = int(config.get('smtp', 'tsl_mode'))
+# check
 thread_count = len(accounts)
 test_duration = int(config.get('general', 'test_duration'))
 # check
-min_interval = int(config.get('general', 'min_interval'))
+min_interval = int(config.get('smtp', 'min_interval'))
 # check
-max_interval = int(config.get('general', 'max_interval'))
+max_interval = int(config.get('smtp', 'max_interval'))
 # check
 verbose = int(config.get('general','verbose'))
 send_count = int(config.get('smtp', 'send_count'))
@@ -53,6 +55,7 @@ msg.attach(MIMEText(content, 'plain'))
 attach_file = config.get('smtp', 'attachment')
 if attach_file != '':
     fp = open(attach_file, 'rb')
+    # check
     attachment = MIMEApplication(fp.read())
     fp.close()
     msg.attach(attachment)
@@ -74,11 +77,12 @@ class SendMail(threading.Thread):
 
     def send_mail(self):
         try:
-            server = smtplib.SMTP(server_addr)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(self.username, self.password)
+            session = smtplib.SMTP(server_addr, port=25)
+            session.ehlo()
+            if tsl_mode:
+                session.starttls()
+                session.ehlo()
+            session.login(self.username, self.password)
             lock.acquire()
             global login_success
             login_success = login_success + 1
@@ -94,7 +98,7 @@ class SendMail(threading.Thread):
 
         for x in xrange(send_count):
             try:
-                server.sendmail(self.username, choice(accounts)[0], msg)
+                session.sendmail(self.username, choice(accounts)[0], msg)
                 lock.acquire()
                 global send_success
                 send_success = send_success + 1
@@ -107,7 +111,7 @@ class SendMail(threading.Thread):
                 send_failed = send_failed + 1
                 lock.release()
 
-        server.close()
+        session.quit()
 
     def run(self):
         start = time.time()
@@ -130,7 +134,14 @@ def go():
     print '登录失败次数: %d 次' % login_failed
     print '发送成功邮件: %d 封' % send_success
     print '发送失败邮件: %d 封' % send_failed
-    print '发送邮件容量: %d B' % (send_success * sys.getsizeof(msg))
+    print '发送邮件容量: %s' % pretty_filesize(send_success * sys.getsizeof(msg))
 
-if __name__ == "__main__":
-    go()
+def pretty_filesize(bytes):
+    if bytes >= 1073741824:
+        return str(bytes / 1024 / 1024 / 1024) + ' GiB'
+    elif bytes >= 1048576:
+        return str(bytes / 1024 / 1024) + ' MiB'
+    elif bytes >= 1024:
+        return str(bytes / 1024) + ' KiB'
+    elif bytes < 1024:
+        return str(bytes) + ' Bytes'
