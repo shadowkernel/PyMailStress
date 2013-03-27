@@ -11,19 +11,22 @@ from random import randint
 from lib import account
 
 config = ConfigParser.ConfigParser()
-config.read('etc/pms_config.conf')
-# check
+if config.read('etc/pms_config.conf') == []:
+    print '配置文件读取失败，程序中止'
+    os.kill(os.getpid(), 1)
+    os.kill(os.getppid(), 1)
+
 accounts = account.get()
-# check
+if accounts == []:
+    print '用户信息读取失败，程序中止'
+    os.kill(os.getpid(), 1)
+    os.kill(os.getppid(), 1)
+
 server_addr = config.get('imap', 'addr')
-# check
 thread_count = len(accounts)
 test_duration = int(config.get('general', 'test_duration'))
-# check
 min_interval = int(config.get('imap', 'min_interval'))
-# check
 max_interval = int(config.get('imap', 'max_interval'))
-# check
 verbose = int(config.get('general','verbose'))
 
 # statistics
@@ -36,8 +39,13 @@ lock = threading.Lock()
 class FetchMail(threading.Thread):
     def __init__(self, index):
         threading.Thread.__init__(self)
-        self.username = accounts[index][0]
-        self.password = accounts[index][1]
+        try:
+            self.username = accounts[index][0]
+            self.password = accounts[index][1]
+        except:
+            print '用户信息有误，程序中止'
+            os.kill(os.getpid(), 1)
+            os.kill(os.getppid(), 1)
 
     def get_mail(self):
         try:
@@ -48,8 +56,9 @@ class FetchMail(threading.Thread):
             login_success = login_success + 1
             lock.release()
         except imaplib.IMAP4.error:
-            print '用户名 %s 密码不匹配，接收邮件进程中止' % self.username
+            print '用户名 %s 密码不匹配，程序中止' % self.username
             os.kill(os.getpid(), 1)
+            os.kill(os.getppid(), 1)
         except:
             lock.acquire()
             global login_failed

@@ -16,49 +16,57 @@ from email.mime.multipart import MIMEMultipart
 from lib import account
 
 config = ConfigParser.ConfigParser()
-config.read('etc/pms_config.conf')
-# check
+if config.read('etc/pms_config.conf') == []:
+    print '配置文件读取失败，程序中止'
+    os.kill(os.getpid(), 1)
+    os.kill(os.getppid(), 1)
+
 accounts = account.get()
-# check
+if accounts == []:
+    print '用户信息读取失败，程序中止'
+    os.kill(os.getpid(), 1)
+    os.kill(os.getppid(), 1)
+
 server_addr = config.get('smtp', 'addr')
-# check
 tsl_mode = int(config.get('smtp', 'tsl_mode'))
-# check
 thread_count = len(accounts)
 test_duration = int(config.get('general', 'test_duration'))
-# check
 min_interval = int(config.get('smtp', 'min_interval'))
-# check
 max_interval = int(config.get('smtp', 'max_interval'))
-# check
 verbose = int(config.get('general','verbose'))
 send_count = int(config.get('smtp', 'send_count'))
-# check
 
 msg = MIMEMultipart()
 msg['Subject'] = 'TEST'
 msg['From'] = "Joe"
 msg['To'] = "Whatever"
 
-# rewrite
-content_file = config.get('smtp', 'content')
-if content_file == '':
+content_files = config.get('smtp', 'content').split()
+if content_files == []:
     content = "It's a Long Way to the Top if You Wanna Rock'N'Roll!!!!"
 else:
-    fp = open(content_file, 'r')
-    # check
-    content = fp.read()
-    fp.close()
+    for file in content_files:
+        try:
+            fp = open(file, 'r')
+        except:
+            print '文件 %s 打开失败，程序中止' % file
+            os.kill(os.getpid(), 1)
+            os.kill(os.getppid(), 1)
+        content = fp.read()
+        msg.attach(MIMEText(content+'\n\n', 'plain'))
+        fp.close()
 
-msg.attach(MIMEText(content, 'plain'))
-
-attach_file = config.get('smtp', 'attachment')
-if attach_file != '':
-    fp = open(attach_file, 'rb')
-    # check
-    attachment = MIMEApplication(fp.read())
-    fp.close()
-    msg.attach(attachment)
+attach_files = config.get('smtp', 'attachment').split()
+if attach_files != []:
+    for file in attach_files:
+        try:
+            fp = open(file, 'r')
+        except:
+            print '文件 %s 打开失败，程序中止' % file
+            os.kill(os.getpid(), 1)
+            os.kill(os.getppid(), 1)
+        msg.attach(MIMEApplication(fp.read()))
+        fp.close()
 
 msg = msg.as_string()
 
@@ -88,8 +96,9 @@ class SendMail(threading.Thread):
             login_success = login_success + 1
             lock.release()
         except smtplib.SMTPAuthenticationError:
-            print '用户名 %s 与密码不匹配，发送邮件进程中止' % self.username
+            print '用户名 %s 与密码不匹配，程序中止' % self.username
             os.kill(os.getpid(), 1)
+            os.kill(os.getppid(), 1)
         except:
             lock.acquire()
             global login_failed

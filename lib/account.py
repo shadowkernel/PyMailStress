@@ -6,7 +6,12 @@ def get():
     """return list of  user information
     """
     result = []
-    db = open('etc/userdb.txt', 'r')
+    try:
+        db = open('etc/userdb.txt', 'r')
+    except:
+        print '文件 %s 打开失败，程序中止' % file
+        os.kill(os.getpid(), 1)
+        os.kill(os.getppid(), 1)
     lines = db.read().splitlines()
     db.close()
     for line in lines:
