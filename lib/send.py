@@ -42,6 +42,7 @@ msg['From'] = "Joe"
 msg['To'] = "Whatever"
 
 content_files = config.get('smtp', 'content').split()
+content = ''
 if content_files == []:
     content = "It's a Long Way to the Top if You Wanna Rock'N'Roll!!!!"
 else:
@@ -52,9 +53,10 @@ else:
             print '文件 %s 打开失败，程序中止' % file
             os.kill(os.getpid(), 1)
             os.kill(os.getppid(), 1)
-        content = fp.read()
-        msg.attach(MIMEText(content+'\n\n', 'plain'))
+        content = content + fp.read()
         fp.close()
+
+msg.attach(MIMEText(content+'\n\n', 'plain', 'utf-8'))
 
 attach_files = config.get('smtp', 'attachment').split()
 if attach_files != []:
