@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-import re
+import re, os
 
 def get():
     """return list of  user information
